@@ -10,169 +10,104 @@ import SwiftData
 
 struct ContentView: View {
     
-    @State private var isShowingAddExercise = false
-    @State private var isShowingAddWeight = false
-    @State private var exerciseToAddWeight: Exercise?
-    @State private var exerciseToEdit: Exercise?
-    @State private var weightToEdit: Weight?
+    let buttonHeight:CGFloat = 80.0
     
     @Query(sort: \Exercise.name) var exercises: [Exercise]
     
+    @State private var isShowingAddExercise = false
+    @State private var isShowingAddWeight = false
+    @State private var exerciseToAddWeight: Exercise?
+    @State private var exerciseToDetail: Exercise?
+    @State private var weightToEdit: Weight?
+    @State private var scrolledExercise: Exercise?
+    
     var body: some View {
-        NavigationStack {
-            List {
-                ForEach(exercises) {exercise in
-                    Section("\(exercise.name)") {
-                        ForEach(exercise.weights) { weight in
-                            HStack {
-                                Text(weight.date.formatted(.dateTime.day().month().year()))
-                                Spacer()
-                                Text(weight.value, format: .number)
+        GeometryReader(content: { geometry in
+            
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                BGImageView(image: Image("Boxer"))
+                
+                VStack {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 0) {
+                            ForEach(exercises, id: \.self) {exercise in
+                                VStack(alignment: .leading) {
+                                    Text("\(exercise.name)")
+                                        .offset(getOffset(length: exercise.name.count))
+                                        .font(Font.custom("MartianMono-Bold", size: 500))
+                                        .minimumScaleFactor(0.01)
+                                        .textCase(.uppercase)
+                                        .frame(height: geometry.size.height/3, alignment: .bottom)
+                                    
+                                    Spacer()
+                                    Text("PR 00KG")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .font(Font.custom("MartianMono-Bold", size: 30))
+                                }
+                                .padding(30)
+                                .frame(width: geometry.size.width * 0.85)
+                                .foregroundColor(Color("StartColor"))
                             }
-                            .onTapGesture {
-                                weightToEdit = weight
-                            }
+                            Button(action: {
+                                isShowingAddExercise.toggle()
+                            }, label: {
+                                Text("Add exercise")
+                            })
                         }
-                        Button(action: {
-                            exerciseToAddWeight = exercise
-                        }, label: {
-                            Text("Přidej \(exercise.name)")
-                        })
-                        Button(action: {
-                            exerciseToEdit = exercise
-                        }, label: {
-                            Text("Uprav \(exercise.name)")
-                        })
+                        .scrollTargetLayout()
                     }
+                    .onAppear(perform: { scrolledExercise = exercises[0] })
+                    .scrollTargetBehavior(.viewAligned)
+                    .scrollPosition(id: $scrolledExercise)
+                    .font(Font.custom("MartianMono-Regular", size: 15))
+                    .sheet(isPresented: $isShowingAddExercise, content: { AddExerciseSheet().presentationDetents([.fraction(0.2)]) })
+                    .sheet(item: $exerciseToAddWeight, content: { exercise in                         AddWeightSheet(exercise: exercise).presentationDetents([.fraction(0.2)]) })
+                    .sheet(item: $weightToEdit, content: { weight in EditWeightSheet(weight: weight) })
+                    .sheet(item: $exerciseToDetail, content: { exercise in DetailSheet(exercise: exercise) })
+                    
+                    buttonBar
                 }
             }
-            .navigationTitle("Weights")
-            .navigationBarTitleDisplayMode(.large)
-            .sheet(isPresented: $isShowingAddExercise, content: { AddExerciseSheet() })
-            .sheet(item: $exerciseToAddWeight, content: { exercise in
-                AddWeightSheet(exercise: exercise)
-            })
-            .sheet(item: $exerciseToEdit, content: { exercise in
-                EditExerciseSheet(exercise: exercise)
-            })
-            .sheet(item: $weightToEdit, content: { weight in
-                EditWeightSheet(weight: weight)
-            })
-            .toolbar(content: {
-                Button(action: {
-                    isShowingAddExercise.toggle()
-                }, label: {
-                    Text("přidej cviky")
-                })
+            .font(Font.custom("MartianMono-Regular", size: 15))
+            .ignoresSafeArea(edges: .bottom)
+        })
+    }
+    
+    var buttonBar: some View {
+        HStack(spacing: 0) {
+            Button(action: {
+                exerciseToAddWeight = scrolledExercise
+            }) {
+                Color("StopColor")
+                    .overlay {
+                        Text("ADD \(scrolledExercise?.name ?? "")")
+                    }
+                    .frame(height: buttonHeight)
+            }
+            Button(action: {
+                exerciseToDetail = scrolledExercise
+            }, label: {
+                Color("ResetColor")
+                    .overlay {
+                        Text("DETAIL")
+                    }
+                    .frame(height: buttonHeight)
             })
         }
     }
-}
-
-struct AddExerciseSheet: View {
-    @Environment(\.modelContext) var context
-    @Environment(\.dismiss) private var dismiss
     
-    @State private var name: String = ""
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Jméno cviku", text: $name)
-            }
-            .navigationTitle("Add exercise")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar(content: {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button("Save") {
-                        let exercise = Exercise(name: name)
-                        context.insert(exercise)
-                        dismiss()
-                    }
-                    Button("Cancel") { dismiss() }
-                }
-            })
-        }
-    }
-}
-
-struct EditExerciseSheet: View {
-    @Bindable var exercise: Exercise
-    @Environment(\.modelContext) var context
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Jméno cviku", text: $exercise.name)
-            }
-            .navigationTitle("Edit exercise")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar(content: {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button("Save") {
-                        dismiss()
-                    }
-                    Button("Delete") {
-                        context.delete(exercise)
-                        dismiss()
-                    }
-                }
-            })
-        }
-    }
-}
-
-struct AddWeightSheet: View {
-    @Bindable var exercise: Exercise
-    
-    @Environment(\.modelContext) var context
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var value: Double = 0
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Váha", value: $value, format: .number)
-                    .keyboardType(.decimalPad)
-            }
-            .navigationTitle("Add weight")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar(content: {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button("Save") {
-                        let weight = Weight(value: value)
-                        exercise.weights.append(weight)
-                        dismiss()
-                    }
-                    Button("Cancel") { dismiss() }
-                }
-            })
-        }
-    }
-}
-
-struct EditWeightSheet: View {
-    @Bindable var weight: Weight
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var value: Double = 0
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Váha", value: $weight.value, format: .number)
-                    .keyboardType(.decimalPad)
-            }
-            .navigationTitle("Add weight")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar(content: {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button("Save") {
-                        dismiss()
-                    }
-                    Button("Cancel") { dismiss() }
-                }
-            })
+    func getOffset(length: Int) -> CGSize {
+        switch length {
+        case 0...3:
+            return CGSize(width: -15, height: 30)
+        case 4:
+            return CGSize(width: -10, height: 20)
+        case 5...7:
+            return CGSize(width: -5, height: 5)
+        default:
+            return CGSizeZero
         }
     }
 }
