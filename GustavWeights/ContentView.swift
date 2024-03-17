@@ -35,16 +35,17 @@ struct ContentView: View {
                             ForEach(exercises, id: \.self) {exercise in
                                 VStack(alignment: .leading) {
                                     Text("\(exercise.name)")
-                                        .offset(getOffset(length: exercise.name.count))
+                                        .offset(getTitleOffset(length: exercise.name.count))
                                         .font(Font.custom("MartianMono-Bold", size: 500))
                                         .minimumScaleFactor(0.01)
                                         .textCase(.uppercase)
                                         .frame(height: geometry.size.height/3, alignment: .bottom)
                                     
                                     Spacer()
-                                    Text("PR 00KG")
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    
+                                    PersonalRecordView(exercise: exercise)
                                         .font(Font.custom("MartianMono-Bold", size: 30))
+
                                 }
                                 .padding(30)
                                 .frame(width: geometry.size.width * 0.85)
@@ -98,7 +99,7 @@ struct ContentView: View {
         }
     }
     
-    func getOffset(length: Int) -> CGSize {
+    func getTitleOffset(length: Int) -> CGSize {
         switch length {
         case 0...3:
             return CGSize(width: -15, height: 30)

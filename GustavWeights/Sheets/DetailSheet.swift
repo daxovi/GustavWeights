@@ -17,7 +17,7 @@ struct DetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(exercise.weights.sorted { $0.date > $1.date }) { weight in
+                ForEach(exercise.weights.sorted { $0.date > $1.date }, id: \.self) { weight in
                     NavigationLink {
                         EditWeightSheet(weight: weight)
                     } label: {
@@ -26,6 +26,13 @@ struct DetailSheet: View {
                             Spacer()
                             Text(weight.value, format: .number)
                         }
+                    }
+                }
+                .onDelete { IndexSet in
+                    for index in IndexSet {
+                        var sortedWeights = exercise.weights.sorted { $0.date > $1.date }
+                        sortedWeights.remove(at: index)
+                        exercise.weights = sortedWeights
                     }
                 }
                 Section {
@@ -49,7 +56,6 @@ struct DetailSheet: View {
                         Text("Delete").foregroundStyle(.red)
                     })
                 }
-                
                 .navigationTitle("\(exercise.name)")
                 .navigationBarTitleDisplayMode(.large)
             }
