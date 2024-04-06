@@ -18,7 +18,7 @@ struct AddWeightSheet: View {
     
     var body: some View {
         SingleValueEditView(
-            textFieldPlaceholder: "Váha",
+            textFieldPlaceholder: "Weight",
             buttonLabelText: "Save",
             number: $value) {
             if let value = value {

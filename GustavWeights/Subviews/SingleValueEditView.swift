@@ -71,7 +71,7 @@ struct SingleValueEditView: View {
             
             Button(action: buttonFunction,
                    label: {
-                Color("AccentColor")
+                Color("StartColor")
                     .overlay {
                         Text(buttonLabelText)
                             .foregroundStyle(Color("ResetColor"))

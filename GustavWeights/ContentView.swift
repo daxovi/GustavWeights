@@ -20,7 +20,8 @@ struct ContentView: View {
     @State private var exerciseToDetail: Exercise?
     @State private var weightToEdit: Weight?
     @State private var scrolledExercise: Exercise?
-    
+    @State private var scrolledToEnd: Bool = false
+
     var body: some View {
         GeometryReader(content: { geometry in
             
@@ -33,38 +34,29 @@ struct ContentView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 0) {
                             ForEach(exercises, id: \.self) {exercise in
-                                VStack(alignment: .leading) {
-                                    Text("\(exercise.name)")
-                                        .offset(getTitleOffset(length: exercise.name.count))
-                                        .font(Font.custom("MartianMono-Bold", size: 500))
-                                        .minimumScaleFactor(0.01)
-                                        .textCase(.uppercase)
-                                        .frame(height: geometry.size.height/3, alignment: .bottom)
-                                    
-                                    Spacer()
-                                    
-                                    PersonalRecordView(exercise: exercise)
-                                        .font(Font.custom("MartianMono-Bold", size: 30))
-
+                                ExerciseView(exercise: exercise, geometry: geometry, lastExercise: (exercise == exercises.last)) {
+                                    if !isShowingAddExercise {
+                                        isShowingAddExercise.toggle()
+                                    }
                                 }
-                                .padding(30)
-                                .frame(width: geometry.size.width * 0.85)
-                                .foregroundColor(Color("StartColor"))
                             }
-                            Button(action: {
-                                isShowingAddExercise.toggle()
-                            }, label: {
-                                Text("Add exercise")
-                            })
+                            /*
+                            PullToActionView(screenWidth: geometry.size.width) {
+                                if !isShowingAddExercise {
+                                    isShowingAddExercise.toggle()
+                                }
+                            }
+                             */
                         }
                         .scrollTargetLayout()
                     }
                     .onAppear(perform: { scrolledExercise = exercises[0] })
                     .scrollTargetBehavior(.viewAligned)
                     .scrollPosition(id: $scrolledExercise)
-                    .font(Font.custom("MartianMono-Regular", size: 15))
+                    // SHEETS
                     .sheet(isPresented: $isShowingAddExercise, content: { AddExerciseSheet().presentationDetents([.fraction(0.2)]) })
-                    .sheet(item: $exerciseToAddWeight, content: { exercise in                         AddWeightSheet(exercise: exercise).presentationDetents([.fraction(0.2)]) })
+                    .sheet(item: $exerciseToAddWeight, content: { exercise in
+                        AddWeightSheet(exercise: exercise).presentationDetents([.fraction(0.2)]) })
                     .sheet(item: $weightToEdit, content: { weight in EditWeightSheet(weight: weight) })
                     .sheet(item: $exerciseToDetail, content: { exercise in DetailSheet(exercise: exercise) })
                     
@@ -83,7 +75,7 @@ struct ContentView: View {
             }) {
                 Color("StopColor")
                     .overlay {
-                        Text("ADD \(scrolledExercise?.name ?? "")")
+                        Text("ADD WEIGHT")
                     }
                     .frame(height: buttonHeight)
             }
@@ -97,19 +89,7 @@ struct ContentView: View {
                     .frame(height: buttonHeight)
             })
         }
-    }
-    
-    func getTitleOffset(length: Int) -> CGSize {
-        switch length {
-        case 0...3:
-            return CGSize(width: -15, height: 30)
-        case 4:
-            return CGSize(width: -10, height: 20)
-        case 5...7:
-            return CGSize(width: -5, height: 5)
-        default:
-            return CGSizeZero
-        }
+        .foregroundStyle(Color("StartColor"))
     }
 }
 

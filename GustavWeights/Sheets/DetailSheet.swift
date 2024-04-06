@@ -37,13 +37,7 @@ struct DetailSheet: View {
                 }
                 Section {
                     NavigationLink {
-                        VStack {
-                            Form {
-                            TextField("name", text: $exercise.name)
-                            }
-
-                            Spacer()
-                        }
+                        renameExercise
                     } label: {
                         Text("Rename")
                     }
@@ -77,5 +71,22 @@ struct DetailSheet: View {
                 
             }
         }
+    }
+    
+    var renameExercise: some View {
+        VStack {
+            Form {
+            TextField("name", text: $exercise.name)
+            }
+
+            Spacer()
+        }
+        .toolbar(content: {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button("Save") {
+                    dismiss()
+                }
+            }
+        })
     }
 }
