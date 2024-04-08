@@ -41,46 +41,51 @@ struct SingleValueEditView: View {
     }
     
     var body: some View {
-        VStack {
-            if text == nil {
-                TextField(textFieldPlaceholder.uppercased(), value: $number, format: .number)
-                    .keyboardType(.decimalPad)
-                    .font(Font.custom("MartianMono-Bold", size: 30))
-                    .focused($focusedField, equals: .weight)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .padding(.top)
-                    .task {
-                        focusedField = .weight
-                    }
-            } else {
-                TextField(textFieldPlaceholder, text: $text.toUnwrapped(defaultValue: ""))
-                    .keyboardType(.default)
-                    .textCase(.uppercase)
-                    .font(Font.custom("MartianMono-Bold", size: 30))
-                    .focused($focusedField, equals: .weight)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .padding(.top)
-                    .task {
-                        focusedField = .weight
-                    }
+            VStack {
+                Spacer()
+                if text == nil {
+                    TextField(textFieldPlaceholder.uppercased(), value: $number, format: .number)
+                        .keyboardType(.decimalPad)
+                        .font(Font.custom("MartianMono-Bold", size: 30))
+                        .focused($focusedField, equals: .weight)
+                        .multilineTextAlignment(.center)
+                        .onAppear() {
+                            focusedField = .weight
+                        }
+                } else {
+                    TextField(textFieldPlaceholder, text: $text.toUnwrapped(defaultValue: ""))
+                        .keyboardType(.default)
+                        .autocorrectionDisabled(true)
+                        .textCase(.uppercase)
+                        .font(Font.custom("MartianMono-Bold", size: 30))
+                        .focused($focusedField, equals: .weight)
+                        .multilineTextAlignment(.center)
+                        .onAppear {
+                            focusedField = .weight
+                        }
+                }
+                Spacer()
+                Button(action: buttonFunction,
+                       label: {
+                    Color("StartColor")
+                        .overlay {
+                            Text(buttonLabelText)
+                                .foregroundStyle(Color("ResetColor"))
+                        }
+                        .frame(height: 80)
+                })
             }
-                
-            Spacer()
-            
-            Button(action: buttonFunction,
-                   label: {
-                Color("StartColor")
-                    .overlay {
-                        Text(buttonLabelText)
-                            .foregroundStyle(Color("ResetColor"))
-                    }
-                    .frame(height: 80)
-            })
+            .overlay {
+                GeometryReader { geometry in
+                    Color.clear
+                        .onAppear {
+                            print(geometry.frame(in: .global).height)
+                        }
+                }
+            }
         }
     }
-}
+
 
 extension Binding {
      func toUnwrapped<T>(defaultValue: T) -> Binding<T> where Value == Optional<T>  {

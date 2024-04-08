@@ -61,7 +61,7 @@ struct DetailSheet: View {
                 }
             })
             .font(Font.custom("MartianMono-Regular", size: 15))
-            .confirmationDialog("opravdu chcete cvik vymazat?",
+            .confirmationDialog("Do you really want to delete the exercise?",
                                 isPresented: $showingDialog,
                                 titleVisibility: .visible) {
                 Button("Yes, delete", role: .destructive) {

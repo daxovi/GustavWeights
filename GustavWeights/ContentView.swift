@@ -12,7 +12,9 @@ struct ContentView: View {
     
     let buttonHeight:CGFloat = 80.0
     
+    // SwiftData
     @Query(sort: \Exercise.name) var exercises: [Exercise]
+    @Environment(\.modelContext) var context
     
     @State private var isShowingAddExercise = false
     @State private var isShowingAddWeight = false
@@ -21,7 +23,9 @@ struct ContentView: View {
     @State private var weightToEdit: Weight?
     @State private var scrolledExercise: Exercise?
     @State private var scrolledToEnd: Bool = false
-
+    
+    @AppStorage("loadFirstExercise") private var loadFirstExercise = true
+    
     var body: some View {
         GeometryReader(content: { geometry in
             
@@ -32,7 +36,7 @@ struct ContentView: View {
                 
                 VStack {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 0) {
+                        LazyHStack(spacing: 0) {
                             ForEach(exercises, id: \.self) {exercise in
                                 ExerciseView(exercise: exercise, geometry: geometry, lastExercise: (exercise == exercises.last)) {
                                     if !isShowingAddExercise {
@@ -40,27 +44,56 @@ struct ContentView: View {
                                     }
                                 }
                             }
-                            /*
-                            PullToActionView(screenWidth: geometry.size.width) {
-                                if !isShowingAddExercise {
-                                    isShowingAddExercise.toggle()
-                                }
-                            }
-                             */
                         }
                         .scrollTargetLayout()
                     }
-                    .onAppear(perform: { scrolledExercise = exercises[0] })
+                    .overlay {
+                        if exercises.isEmpty {
+                            VStack {
+                                Text("ADD EXERCISE")
+                                    .font(Font.custom("MartianMono-Bold", size: 22))
+                                    .padding()
+                                Text("to record your lifted weight, add exercise")
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .multilineTextAlignment(.center)
+                                Image(systemName: "plus.circle.fill")
+                                    .resizable()
+                                    .frame(width: 80, height: 80)
+                                    .onTapGesture(perform: {isShowingAddExercise.toggle()})
+                                    .padding()
+                                
+                            }
+                            .padding()
+                            .foregroundStyle(Color("StartColor"))
+                        }
+                    }
+                    .task {
+                        if exercises.isEmpty && loadFirstExercise {
+                            let firstExercise = Exercise(name: "Squat")
+                            context.insert(firstExercise)
+                            loadFirstExercise = false
+                        }
+                    }
+                    .onAppear(perform: {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            if !exercises.isEmpty && !loadFirstExercise {
+                                scrolledExercise = exercises[0]
+                            }
+                        }
+                    })
                     .scrollTargetBehavior(.viewAligned)
                     .scrollPosition(id: $scrolledExercise)
+                    
                     // SHEETS
-                    .sheet(isPresented: $isShowingAddExercise, content: { AddExerciseSheet().presentationDetents([.fraction(0.2)]) })
+                    .sheet(isPresented: $isShowingAddExercise, content: { AddExerciseSheet().presentationDetents([.height(150)]) })
                     .sheet(item: $exerciseToAddWeight, content: { exercise in
-                        AddWeightSheet(exercise: exercise).presentationDetents([.fraction(0.2)]) })
+                        AddWeightSheet(exercise: exercise).presentationDetents([.height(150)]) })
                     .sheet(item: $weightToEdit, content: { weight in EditWeightSheet(weight: weight) })
                     .sheet(item: $exerciseToDetail, content: { exercise in DetailSheet(exercise: exercise) })
                     
-                    buttonBar
+                    if !exercises.isEmpty {
+                        buttonBar
+                    }
                 }
             }
             .font(Font.custom("MartianMono-Regular", size: 15))
