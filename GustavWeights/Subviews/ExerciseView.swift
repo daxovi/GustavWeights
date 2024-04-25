@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ExerciseView: View {
     var exercise: Exercise
@@ -13,6 +14,8 @@ struct ExerciseView: View {
     var lastExercise: Bool = false
     var pullToAction: (()->())?
     
+    @Query(sort: \Exercise.name) var exercises: [Exercise]
+
     @State private var plusSize = 0.05
     @State private var position = 0.0
     
@@ -34,7 +37,7 @@ struct ExerciseView: View {
         .padding(30)
         .frame(width: geometry.size.width * (lastExercise ? 1.0 : 0.85))
         .foregroundColor(Color("StartColor"))
-        .overlay { if lastExercise { plusToAction } }
+        .overlay { if lastExercise && !isExerciseFull() { plusToAction } }
     }
     
     var plusToAction: some View {
@@ -69,6 +72,10 @@ struct ExerciseView: View {
                 }
             }
         }
+    }
+    
+    func isExerciseFull() -> Bool {
+        return exercises.count >= 12
     }
     
     func getTitleOffset(length: Int) -> CGSize {

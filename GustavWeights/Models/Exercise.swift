@@ -12,9 +12,11 @@ import SwiftData
 class Exercise {
     var name: String
     var weights: [Weight]
+//    var id: UUID
     
     init(name: String) {
         self.name = name
         self.weights = []
+ //       self.id = UUID()
     }
 }

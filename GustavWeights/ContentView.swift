@@ -35,6 +35,16 @@ struct ContentView: View {
                 BGImageView(image: Image("Boxer"))
                 
                 VStack {
+                    HStack(spacing: 5) {
+                        ForEach(exercises) {exercise in
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill( exercise == scrolledExercise ? Color("StartColor") : Color("ResetColor") )
+                                .frame(height: 5)
+                                
+                        }
+                    }
+                    .padding()
+                    
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 0) {
                             ForEach(exercises, id: \.self) {exercise in
@@ -69,8 +79,12 @@ struct ContentView: View {
                     }
                     .task {
                         if exercises.isEmpty && loadFirstExercise {
-                            let firstExercise = Exercise(name: "Squat")
-                            context.insert(firstExercise)
+                            let firstSquat = Exercise(name: "Squat")
+                            let firstBench = Exercise(name: "Bench press")
+                            let firstDL = Exercise(name: "Dead lift")
+                            context.insert(firstSquat)
+                            context.insert(firstBench)
+                            context.insert(firstDL)
                             loadFirstExercise = false
                         }
                     }
@@ -124,8 +138,4 @@ struct ContentView: View {
         }
         .foregroundStyle(Color("StartColor"))
     }
-}
-
-#Preview {
-    ContentView()
 }
