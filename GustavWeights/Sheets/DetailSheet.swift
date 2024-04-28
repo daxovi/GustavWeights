@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 
 struct DetailSheet: View {
     @Bindable var exercise: Exercise
@@ -17,6 +18,7 @@ struct DetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                ChartView(exercise: exercise)
                 ForEach(exercise.weights.sorted { $0.date > $1.date }, id: \.self) { weight in
                     NavigationLink {
                         EditWeightSheet(weight: weight)
@@ -51,7 +53,7 @@ struct DetailSheet: View {
                     })
                 }
                 .navigationTitle("\(exercise.name)")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarTitleDisplayMode(.inline)
             }
             .toolbar(content: {
                 ToolbarItemGroup(placement: .topBarTrailing) {
